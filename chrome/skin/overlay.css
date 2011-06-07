@@ -1,0 +1,4 @@
+#mailru-session-manager-toolbar-button {
+	list-style-image: url("chrome://mailru-session-manager/skin/toolbar-button.png");
+	-moz-box-orient: horizontal;
+}

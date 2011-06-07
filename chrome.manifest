@@ -1,0 +1,8 @@
+content   mailru-session-manager                 chrome/content/
+skin      mailru-session-manager   classic/1.0   chrome/skin/
+locale    mailru-session-manager   en-US         chrome/locale/en-US/
+locale    mailru-session-manager   ru-RU         chrome/locale/ru-RU/
+
+
+overlay   chrome://browser/content/browser.xul   chrome://mailru-session-manager/content/ff-overlay.xul
+style chrome://global/content/customizeToolbar.xul chrome://mailru-session-manager/skin/overlay.css

@@ -1,0 +1,6 @@
+<!ENTITY mailru-session-manager-ToolbarButton.label "Mail.ru sessions">
+<!ENTITY mailru-session-manager-ToolbarButton.tooltip "Manage your mail.ru sessions">
+<!ENTITY mailru-session-manager-ToolbarMenu.empty "No sessions...">
+<!ENTITY mailru-session-manager-ToolbarMenu.add-this "Save current session as...">
+<!ENTITY mailru-session-manager-ToolbarMenu.add-clean "Open new empty session">
+<!ENTITY mailru-session-manager-ToolbarMenu.remove "Remove current session from list">

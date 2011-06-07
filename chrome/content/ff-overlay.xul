@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet href="chrome://mailru-session-manager/skin/overlay.css" type="text/css"?>
+<!DOCTYPE overlay SYSTEM "chrome://mailru-session-manager/locale/overlay.dtd">
+<overlay id="mailru-session-manager-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	<script src="overlay.js"/>
+	<script src="ff-overlay.js"/>
+	<stringbundleset id="stringbundleset">
+		<stringbundle id="mailru-session-manager-strings" src="chrome://mailru-session-manager/locale/overlay.properties"/>
+	</stringbundleset>
+	<toolbarpalette id="BrowserToolbarPalette">
+		<toolbaritem id="mailru-session-manager-toolbar-button-container" class="chromeclass-toolbar-additional" removable="true">
+			<toolbarbutton id="mailru-session-manager-toolbar-button" type="menu" class="toolbarbutton-1" label="&mailru-session-manager-ToolbarButton.label;" tooltiptext="&mailru-session-manager-ToolbarButton.tooltip;">
+				<menupopup id="mailru-session-manager-toolbar-menu" placespopup="true" context="placesContext" popupsinherittooltip="true" onpopupshowing="mailru_session_manager.menuFillAccounts();">
+					<menuitem id="mailru-session-manager-toolbar-menu-empty" value="0" label="&mailru-session-manager-ToolbarMenu.empty;" disabled="true" />
+					<menuseparator />
+					<menuitem id="mailru-session-manager-toolbar-menu-add-this" label="&mailru-session-manager-ToolbarMenu.add-this;" oncommand="mailru_session_manager.onSaveCurrentSession();" />
+					<menuitem id="mailru-session-manager-toolbar-menu-add-clean" label="&mailru-session-manager-ToolbarMenu.add-clean;" oncommand="mailru_session_manager.onOpenNewEmptySession();" />
+					<menuitem id="mailru-session-manager-toolbar-menu-remove" label="&mailru-session-manager-ToolbarMenu.remove;" oncommand="mailru_session_manager.onRemoveCurrentSession();" />
+				</menupopup>
+			</toolbarbutton>
+		</toolbaritem>
+	</toolbarpalette>
+</overlay>
