@@ -57,7 +57,7 @@ var mailru_session_manager = {
 			// create DB if it is not exists
 			dbConnection = this._dbCreate(dbService, dbFile);
 			// save DB version into stats
-			var statement = dbConnection.createStatement("INSERT INTO stat (name, value) VALUES ('version', '0.1')");
+			var statement = dbConnection.createStatement("INSERT INTO stat (name, value) VALUES ('version', '0.2')");
 			statement.execute();
 			statement.finalize();
 		} else {
@@ -311,6 +311,32 @@ var mailru_session_manager = {
 
 	// Save current session with new name
 	onSaveCurrentSession: function(e) {
+		// check if we have cookies
+		var cookie_is_exists = false;
+		var cookie_is_session_only = false;
+		for (var e = this.cookieManager.enumerator; e.hasMoreElements();) {
+			var cookie = e.getNext().QueryInterface(Components.interfaces.nsICookie);
+			if (cookie.host == '.mail.ru' && cookie.name == 'Mpop') {
+				cookie_is_exists = true;
+				if (cookie.expires == 0) {
+					cookie_is_session_only = true;
+				}
+				break;
+			}
+		}
+
+		if (!cookie_is_exists) {
+			// cookie is not exists - warn user
+			if (!this.promptService.confirm(window, this.strings.getString('saveSession.not_exists_title'), this.strings.getString('saveSession.not_exists_text'))) {
+				return false;
+			}
+		} else if (cookie_is_session_only) {
+			// cookie is session-only - warn user
+			if (!this.promptService.confirm(window, this.strings.getString('saveSession.session_only_title'), this.strings.getString('saveSession.session_only_text'))) {
+				return false;
+			}
+		}
+
 		var saved = false;
 		var state = false;
 		var result = {
@@ -320,7 +346,7 @@ var mailru_session_manager = {
 		var prompt_text = this.strings.getString('saveSession.text');
 		while (!saved) {
 			if (!this.promptService.prompt(null, this.strings.getString('saveSession.title'), prompt_text, result.input, null, result.check)) {
-				return;
+				return false;
 			}
 			// trim input
 			result.input.value = result.input.value.replace(/^\s\s*/, '').replace(/\s\s*$/, '');
