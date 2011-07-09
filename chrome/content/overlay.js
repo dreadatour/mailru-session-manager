@@ -57,7 +57,7 @@ var mailru_session_manager = {
 			// create DB if it is not exists
 			dbConnection = this._dbCreate(dbService, dbFile);
 			// save DB version into stats
-			var statement = dbConnection.createStatement("INSERT INTO stat (name, value) VALUES ('version', '0.2')");
+			var statement = dbConnection.createStatement("INSERT INTO stat (name, value) VALUES ('version', '0.3')");
 			statement.execute();
 			statement.finalize();
 		} else {
