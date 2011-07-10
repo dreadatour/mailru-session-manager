@@ -7,6 +7,13 @@ var mailru_session_manager = {
 		cookies:  "id INTEGER PRIMARY KEY, account_id INTEGER, name TEXT, value TEXT, host TEXT, path TEXT, expires INTEGER, isSecure INTEGER, CONSTRAINT moz_uniqueid UNIQUE (account_id, name, host, path)"
 	},
 
+	// Timers
+	faviconTimer: null,
+
+	// New mail checker
+	checkNewMailInterval: 1,
+	newMail: {},
+
 	// Initialize addon
 	onLoad: function() {
 		this.initialized = true;
@@ -25,8 +32,78 @@ var mailru_session_manager = {
 		this.IOService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
 		// init prompt service
 		this.promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
+		// init observer service
+		this.observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
 		// init DB
 		this.dbInit();
+
+		this.StreamListener = function(aChannel, aCookies, aAccount, aContext, aCallbackFunc) {
+			this.channel = aChannel;
+			this.cookies = aCookies;
+			this.account = aAccount;
+			this.context = aContext;
+			this.callbackFunc = aCallbackFunc;
+		};
+		this.StreamListener.prototype = {
+			mData: '',
+			observe: function(aSubject, aTopic, aData) {
+				// Make sure it is our connection first.
+				if (aSubject == this.channel) {
+					var httpChannel = aSubject.QueryInterface(Components.interfaces.nsIHttpChannel);
+					if (aTopic == "http-on-modify-request") {
+						this.channel.setRequestHeader("Cookie", this.cookies, false);
+					}
+				}
+			},
+			onStartRequest: function(aRequest, aContext) {
+				this.mData = '';
+			},
+			onDataAvailable: function(aRequest, aContext, aStream, aSourceOffset, aLength) {
+				var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance(Components.interfaces.nsIScriptableInputStream);
+				scriptableInputStream.init(aStream);
+				this.mData += scriptableInputStream.read(aLength);
+			},
+			onStopRequest: function(aRequest, aContext, aStatus) {
+				if (Components.isSuccessCode(aStatus)) {
+					// request was successfull
+					this.callbackFunc(this.mData, this.account, this.context);
+				} else {
+					// request failed
+					this.callbackFunc(null, null, null);
+				}
+				this.channel = null;
+			},
+			onChannelRedirect: function(aOldChannel, aNewChannel, aFlags) {
+				// if redirecting, store the new channel
+				this.channel = aNewChannel;
+			},
+			getInterface: function(aIID) {
+				try {
+					return this.QueryInterface(aIID);
+				} catch (e) {
+					throw Components.results.NS_NOINTERFACE;
+				}
+			},
+			onProgress: function(aRequest, aContext, aProgress, aProgressMax) {},
+			onStatus: function(aRequest, aContext, aStatus, aStatusArg) {},
+			onRedirect: function(aOldChannel, aNewChannel) {},
+			QueryInterface: function(aIID) {
+				if (aIID.equals(Components.interfaces.nsISupports) ||
+					aIID.equals(Components.interfaces.nsIInterfaceRequestor) ||
+					aIID.equals(Components.interfaces.nsIChannelEventSink) ||
+					aIID.equals(Components.interfaces.nsIProgressEventSink) ||
+					aIID.equals(Components.interfaces.nsIHttpEventSink) ||
+					aIID.equals(Components.interfaces.nsIStreamListener) ||
+					aIID.equals(Components.interfaces.nsIObserver))
+				{
+					return this;
+				}
+				throw Components.results.NS_NOINTERFACE;
+			}
+		};
+
+		// run check new mail
+		this.checkNewMail();
 	},
 
 	// Create table (internal)
@@ -113,7 +190,11 @@ var mailru_session_manager = {
 				item.setAttribute('name',    'mailru-session-manager-account');
 				item.setAttribute('type',    'radio');
 				item.setAttribute('value',   accounts[i].id);
-				item.setAttribute('label',   accounts[i].name);
+				if (this.newMail[accounts[i].name] == undefined) {
+					item.setAttribute('label',   accounts[i].name);
+				} else {
+					item.setAttribute('label',   accounts[i].name + ' (' + this.newMail[accounts[i].name] + ')');
+				}
 				item.setAttribute('checked', accounts[i].active ? true : false);
 				item.addEventListener('command', this.onSelectAccount.bind(this), true);
 				menu.insertBefore(item, separator);
@@ -131,6 +212,25 @@ var mailru_session_manager = {
 			document.getElementById('mailru-session-manager-toolbar-menu-remove').disabled = true;
 		}
 		return true;
+	},
+
+	// Build cookie string
+	buildCookie: function(cookie) {
+		// name - value
+		var cookieString = cookie.name + '=' + cookie.value;
+		// expires
+		if (cookie.expires > 0) {
+			cookieString = cookieString + ";expires=" + (new Date(cookie.expires * 1000)).toGMTString();
+		}
+		// path
+		cookieString = cookieString + ";path=" + cookie.path;
+		// host
+		cookieString = cookieString + ";domain=" + cookie.host;
+		// secure
+		if (cookie.isSecure == true) {
+			cookieString = cookieString + ";secure";
+		}
+		return cookieString;
 	},
 
 	// Store firefox cookies into account DB
@@ -176,7 +276,7 @@ var mailru_session_manager = {
 	restoreCookies: function(account_id) {
 		// get cookies from DB for account
 		cookies = [];
-		statement = this.dbConnection.createStatement("SELECT name, value, host, path, expires, isSecure FROM cookies WHERE account_id = ?1");
+		var statement = this.dbConnection.createStatement("SELECT name, value, host, path, expires, isSecure FROM cookies WHERE account_id = ?1");
 		statement.bindInt32Parameter(0, account_id);
 		try {
 			while (statement.step()) {
@@ -205,28 +305,12 @@ var mailru_session_manager = {
 
 		// set cookies from DB into forefox
 		for (var i = 0, l = cookies.length; i < l; i++) {
-			var cookie = cookies[i];
-			// url
-			var url = cookie.isSecure ? "https://mail.ru" : "http://mail.ru";
-			var cookieUri = this.IOService.newURI(url, null, null);
-
-			// name - value
-			var cookieString = cookie.name + '=' + cookie.value;
-			// expires
-			if (cookie.expires > 0) {
-				cookieString = cookieString + ";expires=" + (new Date(cookie.expires * 1000)).toGMTString();
-			}
-			// path
-			cookieString = cookieString + ";path=" + cookie.path;
-			// host
-			cookieString = cookieString + ";domain=" + cookie.host;
-			// secure
-			if (cookie.isSecure == true) {
-				cookieString = cookieString + ";secure";
-			}
-
-			// set cookie
-			this.cookieService.setCookieString(cookieUri, null, cookieString, null);
+			this.cookieService.setCookieString(
+				this.IOService.newURI(cookies[i].isSecure ? "https://mail.ru" : "http://mail.ru", null, null),
+				null,
+				this.buildCookie(cookies[i]),
+				null
+			);
 		}
 	},
 
@@ -250,6 +334,8 @@ var mailru_session_manager = {
 		statement.finalize();
 
 		this.activeAccount = account_id;
+
+		this.checkNewMail();
 	},
 
 	// Create new account
@@ -271,6 +357,8 @@ var mailru_session_manager = {
 			statement.reset();
 		}
 
+		this.checkNewMail();
+
 		return account_id;
 	},
 
@@ -279,12 +367,14 @@ var mailru_session_manager = {
 		var statement = this.dbConnection.createStatement("DELETE FROM accounts WHERE id = ?1");
 		statement.bindInt32Parameter(0, account_id);
 		statement.execute();
-		
+
 		statement = this.dbConnection.createStatement("DELETE FROM cookies WHERE account_id = ?1");
 		statement.bindInt32Parameter(0, account_id);
 		statement.execute();
-		
+
 		statement.finalize();
+
+		this.checkNewMail();
 	},
 
 	// Select an account
@@ -307,6 +397,8 @@ var mailru_session_manager = {
 				}
 			}
 		}
+
+		this.checkNewMail();
 	},
 
 	// Save current session with new name
@@ -385,6 +477,8 @@ var mailru_session_manager = {
 				}
 			}
 		}
+
+		this.checkNewMail();
 	},
 
 	// Open new session
@@ -395,6 +489,8 @@ var mailru_session_manager = {
 			this.clearCookies();
 			this.setAccountActive(account_id);
 		}
+
+		this.checkNewMail();
 	},
 
 	// Remove current session from list
@@ -404,6 +500,50 @@ var mailru_session_manager = {
 			this.clearCookies();
 			this.setAccountActive(0);
 		}
+
+		this.checkNewMail();
+	},
+
+	// Check new mail
+	checkNewMail: function() {
+		var accounts = this.getAccounts();
+		if (accounts.length > 0) {
+			var statement;
+			var uri = this.IOService.newURI('http://e.mail.ru/cgi-bin/mailcnt?json=1', null, null);
+			for (var i = 0, l = accounts.length; i < l; i++) {
+				// get cookies from DB for account
+				cookies = [];
+				statement = this.dbConnection.createStatement("SELECT name, value FROM cookies WHERE account_id = ?1");
+				statement.bindInt32Parameter(0, accounts[i].id);
+				try {
+					while (statement.step()) {
+						cookies.push(statement.row.name + '=' + statement.row.value);
+					}
+				} finally {
+					statement.reset();
+				}
+
+				// create request
+				var channel = this.IOService.newChannelFromURI(uri);
+				var listener = new this.StreamListener(channel, cookies.join(' '), accounts[i], this, function(data, account, context) {
+					if (data != null) {
+						var mail_count = /NewMailCNT:"(\d+)"/.exec(data);
+						if (mail_count) {
+							context.newMail[account.name] = mail_count[1];
+						} else {
+							context.newMail[account.name] = context.strings.getString('checkNewMail.not_logged_in');
+						}
+					} else {
+						context.newMail[account.name] = context.strings.getString('checkNewMail.error');
+					}
+				});
+				this.observerService.addObserver(listener, "http-on-modify-request", false);
+				channel.notificationCallbacks = listener;
+				channel.asyncOpen(listener, null);
+			}
+		}
+
+		this.faviconTimer = setTimeout(function() { mailru_session_manager.checkNewMail() }, this.checkNewMailInterval * 60000);
 	}
 };
 
