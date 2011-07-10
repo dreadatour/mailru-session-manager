@@ -89,7 +89,7 @@
                 <em:minVersion>3.5</em:minVersion>
                 <em:maxVersion>5.*</em:maxVersion>
                 <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.4.2.xpi</em:updateLink>
-                <em:updateHash>sha1:5725d9c37a54a6ffce51bd9e9b0a9e05c7a32408</em:updateHash>
+                <em:updateHash>sha1:30d41f8ad0bc32c6c890a168cb829fad07015392</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
