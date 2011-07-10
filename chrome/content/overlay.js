@@ -51,7 +51,9 @@ var mailru_session_manager = {
 				if (aSubject == this.channel) {
 					var httpChannel = aSubject.QueryInterface(Components.interfaces.nsIHttpChannel);
 					if (aTopic == "http-on-modify-request") {
-						this.channel.setRequestHeader("Cookie", this.cookies, false);
+						httpChannel.setRequestHeader("Cookie", this.cookies, false);
+					} else if (aTopic == "http-on-examine-response") {
+						httpChannel.setResponseHeader("Set-Cookie", '', false);
 					}
 				}
 			},
@@ -538,6 +540,7 @@ var mailru_session_manager = {
 					}
 				});
 				this.observerService.addObserver(listener, "http-on-modify-request", false);
+				this.observerService.addObserver(listener, "http-on-examine-response", false);
 				channel.notificationCallbacks = listener;
 				channel.asyncOpen(listener, null);
 			}

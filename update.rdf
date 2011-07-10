@@ -14,7 +14,7 @@
                 <em:minVersion>3.5</em:minVersion>
                 <em:maxVersion>4.0.*</em:maxVersion>
                 <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.1.xpi</em:updateLink>
-				<em:updateHash>sha1:84f9a5806863717b964f27aef635bc4dd6561c8f</em:updateHash>
+                <em:updateHash>sha1:84f9a5806863717b964f27aef635bc4dd6561c8f</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -29,7 +29,7 @@
                 <em:minVersion>3.5</em:minVersion>
                 <em:maxVersion>4.0.*</em:maxVersion>
                 <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.2.xpi</em:updateLink>
-				<em:updateHash>sha1:366fe9911e631a6c4e7de3961d35ce438a644d32</em:updateHash>
+                <em:updateHash>sha1:366fe9911e631a6c4e7de3961d35ce438a644d32</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
@@ -44,7 +44,37 @@
                 <em:minVersion>3.5</em:minVersion>
                 <em:maxVersion>5.*</em:maxVersion>
                 <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.3.xpi</em:updateLink>
-				<em:updateHash>sha1:1a76114377cd47386e42f4d638bc6f4a01bcafe6</em:updateHash>
+                <em:updateHash>sha1:1a76114377cd47386e42f4d638bc6f4a01bcafe6</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+
+        <RDF:li>
+          <RDF:Description>
+            <em:version>0.4</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+                <em:minVersion>3.5</em:minVersion>
+                <em:maxVersion>5.*</em:maxVersion>
+                <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.4.xpi</em:updateLink>
+                <em:updateHash>sha1:d238569e53f96c9d3d41a69318ba2956e5fd0582</em:updateHash>
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+
+        <RDF:li>
+          <RDF:Description>
+            <em:version>0.4.1</em:version>
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+                <em:minVersion>3.5</em:minVersion>
+                <em:maxVersion>5.*</em:maxVersion>
+                <em:updateLink>http://firefox.dreadatour.ru/mailru-session-manager/mailru-session-manager-0.4.1.xpi</em:updateLink>
+                <em:updateHash>sha1:5725d9c37a54a6ffce51bd9e9b0a9e05c7a32408</em:updateHash>
               </RDF:Description>
             </em:targetApplication>
           </RDF:Description>
