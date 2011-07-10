@@ -4,7 +4,7 @@
 		<em:id>session-manager@mail.ru</em:id>
 		<em:type>2</em:type>
 		<em:name>Mail.Ru Session Manager</em:name>
-		<em:version>0.3</em:version>
+		<em:version>0.4.2</em:version>
 		<em:creator>Vladimir Rudnyh</em:creator>
 		<em:contributor></em:contributor>
 		<em:description>Manage your mail.ru sessions</em:description>
